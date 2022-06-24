@@ -1,4 +1,4 @@
-.gitignore
+development.log
 async.js
 callbacks.js
 desafioPromesas2.js
