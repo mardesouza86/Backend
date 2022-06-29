@@ -45,7 +45,22 @@ class Contenedor {
         const str = JSON.stringify(data)
         return  fs.promises.writeFile(this.filename, str)
     }
+
+    async deleteAll() {
+        try {
+          await this.createEmptyFile();
+        } catch (error) {
+          console.log(
+            `There was an error (${error.code}) when trying to delete all the objects`
+          );
+        }
+      }
     
-}
+      async getAll() {
+        const data = await this.getData();
+        return JSON.parse(data);
+      }
+    }
+    
 
 module.exports = Contenedor
