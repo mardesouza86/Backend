@@ -1,66 +1,105 @@
-const fs = require('fs')
+const fs = require ('fs')
 
-class Contenedor {
-    constructor(filename)  {
-        this.filename = filename
+class Contenedor{
+    constructor(name){
+        this.name = name
     }
 
-    async save(obj) {
-        let data = []
+    // Obtengo todos los productos y los parseo a un array
+
+    async getAll() {
         try {
-            data = await this.getData()
-        } catch(e) {
-            console.log('No file')
+            const arr = await fs.promises.readFile(this.name, 'utf-8');
+            const arrParsed = JSON.parse(arr);
+            return arrParsed;
+        } catch (err) {
+            console.log(err);
         }
-
-        let lastID = 1
-        if (data.length > 0) {
-            lastID = data[data.length-1].id + 1
-        }
-
-        obj.id = lastID
-        data.push(obj)
-
-        await this.writeData(data)
-
-        return obj
     }
 
-    async deleteById(id) {
-        const data = await this.getData()
+    // guardo por producto
 
-        const idx = data.findIndex(d => d.id == id)
-        const obj = data.splice(idx, 1)
-        await this.writeData(data)
-
-        return obj
-    }
-
-    getData() {
-        return fs.promises.readFile(this.filename,  'utf-8')
-            .then(d => JSON.parse(d))
-    }
-
-    writeData(data) {
-        const str = JSON.stringify(data)
-        return  fs.promises.writeFile(this.filename, str)
-    }
-
-    async deleteAll() {
+    async save(objeto){
+        let producto = {}
+        let ultimoId = 0
         try {
-          await this.createEmptyFile();
+            const arr = await this.getAll()
+            if(arr.length > 0) ultimoId = arr[arr.length - 1].id
+            if(arr){
+                producto = {title: objeto.title,price: objeto.price, thumbnail: objeto.thumbnail, id: ultimoId + 1}
+                arr.push(producto)
+                await fs.promises.writeFile(this.name,JSON.stringify(arr))
+                return producto.id
+            }
         } catch (error) {
-          console.log(
-            `There was an error (${error.code}) when trying to delete all the objects`
-          );
+            console.log(error);
         }
-      }
-    
-      async getAll() {
-        const data = await this.getData();
-        return JSON.parse(data);
-      }
+        
     }
-    
 
-module.exports = Contenedor
+    //obtengo por numero de ID
+
+    async getById(number){
+        try {
+            const arr = await this.getAll()
+            let producto = null
+            for (let i = 0; i < arr.length; i++) {
+                if (arr[i].id === number) {
+                    producto = arr[i]
+                }
+            }
+            return producto
+        } catch (error) {
+            console.log('Hubo un error al obtener el producto.');
+        }
+    }
+
+    // borro por numero de ID
+
+    async deleteById(number){
+        try {
+            let arr = await this.getAll()
+            let newArr = []
+            for (let i = 0; i < arr.length; i++) {
+                if (arr[i].id !== number) {
+                    newArr.push(arr[i])
+                }
+            }
+            fs.promises.writeFile(this.nombre,JSON.stringify(newArr))
+        } catch (error) {
+            console.log('Hubo un error al borrar el producto.');
+        }
+    }
+    async deleteAll(){
+        try {
+            fs.promises.writeFile(this.nombre,'[]')
+        } catch (error) {
+            console.log('No se  borraron todos los objetos.');
+        }
+    }
+}
+
+// Creo nuevo contenedor para productos
+
+let contenedorUno = new Contenedor('productos.txt')
+
+let object = {
+    title: 'Lapiz',
+    price: 500,
+    thumbnail: 'url de la foto del producto'
+}
+
+
+// muestro todos los productos
+async function mostrar(){
+    const id = await contenedorUno.save(object);
+    console.log(id);
+    let productos = await contenedorUno.getAll();
+    console.log(productos);
+    const producto = await contenedorUno.getById(3);
+    console.log(producto);
+}
+
+// ejecuto la funcion mostrar
+mostrar();
+
