@@ -9,9 +9,25 @@ app.use(express.urlencoded({extended: true}))
 
 const db = new Contenedor('db.json')
 
-app.get('/', (req, res) => res.sendFile(__dirname + '/views/form.html')) 
+
+
+app.get('/', (req, res) => res.sendFile(__dirname + '/views/form.html'))
 app.get('/update/:id', async (req, res) => {
     const data = await db.getOneData(req.params.id)
+    res.render('update', { data })
+})
+app.get('/products', (req, res) => {
+    db.getData()
+        .then( data => res.render('products', { data } ))
+        .catch(e => {
+            console.log(e);
+            res.send('Error to load data')
+        })
+})
+
+
+app.get('/update/:image', async (req, res) => {
+    const data = await db.getOneData(req.params.image)
     res.render('update', { data })
 })
 app.get('/products', (req, res) => {
@@ -33,9 +49,7 @@ app.post('/products', (req, res) => {
             res.send('Error to save')
         })
 })
-app.post('/update-products', (req, res) => {
-    console.log(req)
-    console.log('asdasd');
+app.post('/update', (req, res) => {
     db.update(req.body)
         .then(() => res.redirect('/products'))
         .catch(e => {
